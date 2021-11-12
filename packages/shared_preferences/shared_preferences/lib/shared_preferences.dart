@@ -19,7 +19,6 @@ import 'package:shared_preferences_windows/shared_preferences_windows.dart';
 class SharedPreferences {
   SharedPreferences._(this._preferenceCache);
 
-  static const String _prefix = 'flutter.';
   static Completer<SharedPreferences>? _completer;
   static bool _manualDartRegistrationNeeded = true;
 
@@ -137,14 +136,14 @@ class SharedPreferences {
 
   /// Removes an entry from persistent storage.
   Future<bool> remove(String key) {
-    final String prefixedKey = '$_prefix$key';
+    final String prefixedKey = '$key';
     _preferenceCache.remove(key);
     return _store.remove(prefixedKey);
   }
 
   Future<bool> _setValue(String valueType, String key, Object value) {
     ArgumentError.checkNotNull(value, 'value');
-    final String prefixedKey = '$_prefix$key';
+    final String prefixedKey = '$key';
     if (value is List<String>) {
       // Make a copy of the list so that later mutations won't propagate
       _preferenceCache[key] = value.toList();
@@ -182,8 +181,7 @@ class SharedPreferences {
     // Strip the flutter. prefix from the returned preferences.
     final Map<String, Object> preferencesMap = <String, Object>{};
     for (String key in fromSystem.keys) {
-      assert(key.startsWith(_prefix));
-      preferencesMap[key.substring(_prefix.length)] = fromSystem[key]!;
+      preferencesMap[key] = fromSystem[key]!;
     }
     return preferencesMap;
   }
@@ -196,9 +194,6 @@ class SharedPreferences {
     final Map<String, Object> newValues =
         values.map<String, Object>((String key, Object value) {
       String newKey = key;
-      if (!key.startsWith(_prefix)) {
-        newKey = '$_prefix$key';
-      }
       return MapEntry<String, Object>(newKey, value);
     });
     SharedPreferencesStorePlatform.instance =
